@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- Reusable Thymeleaf Header Fragment -->
+<header th:fragment="header" class="app-header">
+    <div class="header-brand">
+        <div class="brand-icon">🏥</div>
+        <div>
+            <h1 class="brand-title"><a th:href="@{/}" style="color: inherit; text-decoration: none;">MediChain</a></h1>
+            <p class="brand-subtitle">Medicine Stockout Prediction &amp; Redistribution Prototype • <strong>Thymeleaf SSR</strong></p>
+        </div>
+    </div>
+    
+    <div class="header-controls">
+        <div class="system-status">
+            <span class="status-dot"></span>
+            <span th:text="${systemStatus != null ? systemStatus : 'Live System: AI :8082 | PostgreSQL DB :5432'}"></span>
+        </div>
+        <div class="district-selector">
+            <label for="district">District:</label>
+            <select id="district" name="district" onchange="if (window.onDistrictChange) { window.onDistrictChange(this.value); } else { window.location.href='?district=' + encodeURIComponent(this.value); }">
+                <option th:each="d : ${districts}"
+                        th:value="${d}"
+                        th:text="${d}"
+                        th:selected="${d == selectedDistrict}"></option>
+            </select>
+        </div>
+    </div>
+</header>
+
+</body>
+</html>

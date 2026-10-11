@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title th:text="${title}">MediChain - Smart Healthcare Supply Prototype (Thymeleaf SSR)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Thymeleaf Header Fragment -->
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Thymeleaf Navigation Fragment -->
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<main class="app-main">
+
+    <!-- ===================== 1. DASHBOARD (DEFAULT) ===================== -->
+    <section id="tab-dashboard" th:class="${activeTab == 'dashboard' or activeTab == null ? 'page' : 'page hidden'}" class="page">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">District Operations Overview</h2>
+                <p class="muted" id="dashInfo">
+                    Rendered via <strong>Spring Boot &amp; Thymeleaf SSR</strong> • Linked to <strong>PostgreSQL</strong>
+                </p>
+            </div>
+            <div class="quick-actions">
+                <button class="btn btn-secondary" onclick="loadDashboard()">↻ Refresh</button>
+                <button class="btn btn-primary" onclick="showTab('runway')" style="background: #4f46e5;">📈 Stock Runway &amp; Depletion</button>
+                <button class="btn btn-primary" onclick="showTab('map')" style="background: #0284c7;">🗺️ Facility Map &amp; Route</button>
+                <button class="btn btn-primary" onclick="showTab('ask')">⚡ Run Stockout Forecast</button>
+            </div>
+        </div>
+
+        <!-- Autonomous Auto-Pilot Controller Banner -->
+        <div class="panel" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border: 1px solid rgba(255,255,255,0.15);">
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 22px;">🤖</span>
+                    <h3 style="margin: 0; color: #fff; font-size: 16px; font-weight: 700;">Autonomous Supply Chain Auto-Pilot</h3>
+                    <span class="badge" style="background: #10b981; color: white; font-weight: 600; border: none;">ACTIVE</span>
+                </div>
+                <p style="margin: 4px 0 0 32px; color: #cbd5e1; font-size: 13px;">
+                    Impending stockouts &amp; near-expiry batches are automatically transferred from surplus PHCs or procured from suppliers.
+                </p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="autoPilotBtn" class="btn btn-primary" style="background: #6366f1; border: none; font-weight: 600; padding: 8px 16px;" onclick="triggerAutoPilot()">
+                    ⚡ Run Autonomous Rebalance
+                </button>
+                <button class="btn btn-secondary" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); font-weight: 500;" onclick="showAutoPilotHistory()">
+                    📜 Audit Log
+                </button>
+            </div>
+        </div>
+
+        <!-- Facility Network Map & One-Trip Route Planner Callout Banner -->
+        <div class="panel" style="background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%); color: white; padding: 18px 24px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <span style="font-size: 32px; background: rgba(255,255,255,0.2); width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; border-radius: 10px;">🗺️</span>
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h3 style="margin: 0; color: #fff; font-size: 17px; font-weight: 700;">Interactive Facility Map &amp; Delivery Route Planner</h3>
+                        <span class="badge" style="background: #38bdf8; color: #082f49; font-weight: 700; border: none;">GIS LIVE</span>
+                    </div>
+                    <p style="margin: 4px 0 0; color: #e0f2fe; font-size: 13px;">
+                        Explore all healthcare facilities color-coded by stockout risk, visualize inter-facility transfer vectors, and calculate optimized one-trip vehicle routes with fuel &amp; km savings.
+                    </p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn" style="background: #ffffff; color: #0369a1; font-weight: 700; padding: 10px 22px; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);" onclick="showTab('map')">
+                    <span>🗺️ Open Facility Map &amp; Delivery Route &rarr;</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards Grid (Rendered Server-Side via Thymeleaf) -->
+        <div class="kpi-grid" id="cards">
+            <div class="kpi-card kpi-primary">
+                <div class="kpi-header">
+                    <span class="kpi-label">Registered Facilities</span>
+                    <span class="kpi-icon">🏥</span>
+                </div>
+                <div class="kpi-value" th:text="${totalFacilities}">0</div>
+                <div class="kpi-detail">Health centres in selected region</div>
+            </div>
+            <div class="kpi-card kpi-success">
+                <div class="kpi-header">
+                    <span class="kpi-label">Essential Medicines</span>
+                    <span class="kpi-icon">💊</span>
+                </div>
+                <div class="kpi-value" th:text="${totalMedicines}">0</div>
+                <div class="kpi-detail">Active NLEM formulary drugs</div>
+            </div>
+            <div class="kpi-card kpi-primary">
+                <div class="kpi-header">
+                    <span class="kpi-label">Logged Transfers</span>
+                    <span class="kpi-icon">🚚</span>
+                </div>
+                <div class="kpi-value" th:text="${totalTransfers}">0</div>
+                <div class="kpi-detail">Inter-facility redistributions</div>
+            </div>
+            <div class="kpi-card kpi-success">
+                <div class="kpi-header">
+                    <span class="kpi-label">Database Mode</span>
+                    <span class="kpi-icon">🐘</span>
+                </div>
+                <div class="kpi-value">PostgreSQL</div>
+                <div class="kpi-detail">Live port 5432 external link</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Left Column: Critical Attention Needed -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">⚠️ Immediate Stockout Alerts (Next 14 Days)</h3>
+                        <p class="panel-subtitle">Primary Health Centres approaching zero usable stock</p>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="dashRisk" class="data-table"></table>
+                </div>
+            </div>
+
+            <!-- Right Column: Medicine Health -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">📈 Supply Health by Medicine (Last 90 Days)</h3>
+                        <p class="panel-subtitle">Historical demand fulfillment &amp; stockout rate</p>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="dashMed" class="data-table"></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disease Epidemiology Surveillance Panel -->
+        <div class="panel" style="margin-top: 20px;">
+            <div class="panel-header">
+                <div>
+                    <h3 class="panel-title">🌦️ Seasonal Disease Surveillance Trends (District Caseloads)</h3>
+                    <p class="panel-subtitle">Weekly case surveillance driving AI demand forecast weighting (FEVER, DIARRHOEA, and ARI)</p>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="dashDisease" class="data-table"></table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== 2. AI STOCK RUNWAY & DEPLETION PREDICTOR ===================== -->
+    <section id="tab-runway" th:class="${activeTab == 'runway' ? 'page' : 'page hidden'}" class="page hidden">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">📈 AI Stock Duration &amp; Depletion Predictor</h2>
+                <p class="muted" id="runwaySubtitle">Predicts how long inventory will last and exact depletion dates blending historical consumption patterns and seasonal disease surges.</p>
+            </div>
+            <div class="quick-actions">
+                <button class="btn btn-secondary" onclick="loadRunwayData()">↻ Refresh Schedule</button>
+                <button class="btn btn-primary" onclick="triggerAutoPilot()">🤖 Auto-Pilot Rebalance</button>
+            </div>
+        </div>
+
+        <!-- Selector Bar Panel -->
+        <div class="panel" style="margin-bottom: 20px; padding: 18px 22px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between;">
+                <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; flex: 1;">
+                    <div style="min-width: 220px; flex: 1;">
+                        <label class="input-label" for="runwayFacSelect"><b>Select Health Facility:</b></label>
+                        <select id="runwayFacSelect" class="form-control" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--slate-200); font-size: 14px; background: white;">
+                            <option th:each="f : ${facilities}" th:value="${f.id}" th:text="${f.name}"></option>
+                        </select>
+                    </div>
+                    <div style="min-width: 220px; flex: 1;">
+                        <label class="input-label" for="runwayMedSelect"><b>Select Essential Medicine:</b></label>
+                        <select id="runwayMedSelect" class="form-control" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--slate-200); font-size: 14px; background: white;">
+                            <option th:each="m : ${medicines}" th:value="${m.id}" th:text="${m.name} + ' (' + ${m.strength} + ')'"></option>
+                        </select>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" style="margin-top: 20px; padding: 9px 18px;" onclick="runSelectedRunway()">
+                            ⚡ Analyze Depletion Runway
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-chips" style="margin-top: 14px;">
+                <span class="chip-label">Quick Facility Deep-Dives:</span>
+                <button class="chip link" onclick="quickSelectRunway(3, 1)">PHC Gudiyatham • Paracetamol (5d Runway)</button>
+                <button class="chip link" onclick="quickSelectRunway(3, 2)">PHC Gudiyatham • ORS (5d Runway)</button>
+                <button class="chip link" onclick="quickSelectRunway(4, 3)">PHC Anaicut • Zinc Sulphate (6d Runway)</button>
+                <button class="chip link" onclick="quickSelectRunway(2, 1)">CHC Katpadi • Paracetamol (9d Runway)</button>
+            </div>
+        </div>
+
+        <!-- Deep-Dive Runway Results Container -->
+        <div id="runwayDetailContainer" class="hidden">
+            <div class="kpi-grid" id="runwayCards" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 20px;"></div>
+
+            <!-- Visual Depletion Trajectory Chart -->
+            <div class="panel" style="margin-bottom: 20px;">
+                <div class="panel-header flex-between">
+                    <div>
+                        <h3 class="panel-title">📉 Stock Depletion Trajectory (Runway to Zero)</h3>
+                        <p class="panel-subtitle" id="chartTrajectorySubtitle">Day-by-day projected inventory drawdown under AI Seasonal Outbreak vs Baseline Historical Pace.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span class="badge" style="background:#eff6ff; color:#1d4ed8; font-weight:600;">🔵 AI Seasonal</span>
+                        <span class="badge" style="background:#f1f5f9; color:#475569; font-weight:600;">⚪ Baseline Pace</span>
+                        <span class="badge" style="background:#fef2f2; color:#b91c1c; font-weight:600;">🔴 Epidemic Surge</span>
+                    </div>
+                </div>
+                <div class="chart-container" style="min-height: 280px; padding: 10px 0;">
+                    <canvas id="runwayChart" height="95"></canvas>
+                </div>
+            </div>
+
+            <!-- Interactive What-If Scenario Sandbox -->
+            <div class="panel" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; border-radius: 12px; padding: 22px 24px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 22px;">🎛️</span>
+                            <h3 style="margin: 0; color: #fff; font-size: 17px; font-weight: 700;">Interactive What-If Scenario Sandbox</h3>
+                            <span class="badge" style="background: #6366f1; color: white;">LIVE SIMULATOR</span>
+                        </div>
+                        <p style="margin: 4px 0 0 32px; color: #94a3b8; font-size: 13px;">
+                            Simulate adding buffer stock (via emergency transfer or purchase order) or adjusting seasonal disease caseload surge.
+                        </p>
+                    </div>
+                    <button class="btn btn-secondary" style="background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.25);" onclick="resetRunwaySimulation()">
+                        ↺ Reset to Actual Data
+                    </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; background: rgba(255,255,255,0.05); padding: 18px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <label style="font-weight: 600; color: #e2e8f0;">Simulate Stock Buffer Addition:</label>
+                            <span id="sliderStockVal" style="font-weight: 700; color: #38bdf8;">+0 units</span>
+                        </div>
+                        <input type="range" id="simStockSlider" min="0" max="3000" step="50" value="0" style="width: 100%; accent-color: #38bdf8;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 2px;">
+                            <span>+0 (Current)</span>
+                            <span>+1,000</span>
+                            <span>+2,000</span>
+                            <span>+3,000 units</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <label style="font-weight: 600; color: #e2e8f0;">Simulate Seasonal Disease Surge Multiplier:</label>
+                            <span id="sliderSurgeVal" style="font-weight: 700; color: #f59e0b;">1.0x (Actual Forecast)</span>
+                        </div>
+                        <input type="range" id="simSurgeSlider" min="0.5" max="2.5" step="0.1" value="1.0" style="width: 100%; accent-color: #f59e0b;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-top: 2px;">
+                            <span>0.5x (Milder)</span>
+                            <span>1.0x (Baseline AI)</span>
+                            <span>1.8x (Outbreak)</span>
+                            <span>2.5x (Epidemic Wave)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="simOutcomeBanner" style="margin-top: 16px; padding: 14px 18px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 8px; font-size: 13.5px; color: #e0e7ff;"></div>
+            </div>
+
+            <!-- Deep-Dive Analytics Breakdown Grid -->
+            <div class="dashboard-grid" style="margin-bottom: 20px;">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3 class="panel-title">📊 Historical Consumption Velocity</h3>
+                            <p class="panel-subtitle">Multi-window moving averages &amp; demand momentum</p>
+                        </div>
+                    </div>
+                    <div id="historicalStatsBox" style="padding: 10px 14px;"></div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div>
+                            <h3 class="panel-title">🌦️ Seasonal Disease Impact &amp; Weighting</h3>
+                            <p class="panel-subtitle">Epidemiological regression &amp; outbreak acceleration</p>
+                        </div>
+                    </div>
+                    <div id="seasonalityStatsBox" style="padding: 10px 14px;"></div>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-bottom: 20px;">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">📦 Batch-by-Batch FEFO Depletion &amp; Shelf-Life Ledger</h3>
+                        <p class="panel-subtitle">Timeline of when each active batch is consumed vs units that risk expiring on shelf</p>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="runwayBatchTable" class="data-table"></table>
+                </div>
+            </div>
+
+            <div class="summary-card" style="margin-bottom: 24px;">
+                <div class="summary-badge">🤖 AI Depletion &amp; Seasonality Findings</div>
+                <ul id="runwayAiInsights" class="summary-list" style="margin-top: 10px;"></ul>
+            </div>
+        </div>
+
+        <!-- District-wide Stock Runway Schedule Table -->
+        <div class="panel">
+            <div class="panel-header flex-between">
+                <div>
+                    <h3 class="panel-title">📋 District Stock Runway &amp; Depletion Schedule</h3>
+                    <p class="panel-subtitle">All facilities &amp; essential medicines sorted from shortest stock duration to safest buffer</p>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary small" onclick="loadRunwayData()">↻ Refresh Schedule</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="districtRunwayTable" class="data-table"></table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== 3. GEOSPATIAL MAP & ONE-TRIP ROUTE PLANNER ===================== -->
+    <section id="tab-map" th:class="${activeTab == 'map' ? 'page' : 'page hidden'}" class="page hidden">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">🗺️ Facility Geospatial Network &amp; Delivery Route Planner</h2>
+                <p class="muted" id="mapSubtitle">Interactive Leaflet map showing facilities coloured by stockout risk, recommended transfer arrows, and optimized one-trip van delivery routes.</p>
+            </div>
+            <div class="quick-actions">
+                <button class="btn btn-secondary" onclick="resetMapView()">📍 Reset Map View</button>
+                <button class="btn btn-primary" onclick="planDeliveryTrip()" style="background: #2563eb;">⚡ Plan Delivery Trip</button>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 20px; padding: 16px 20px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;">
+                <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label for="vanCapacityInput" style="font-weight: 600; color: var(--navy-800);">Delivery Van Capacity:</label>
+                        <input id="vanCapacityInput" type="number" min="500" max="50000" step="500" value="5000" style="width: 110px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--slate-200); font-weight: 600;">
+                        <span class="muted" style="font-size: 13px;">units</span>
+                    </div>
+
+                    <div style="display: flex; gap: 14px; align-items: center; margin-left: 10px;">
+                        <label class="filter-toggle" style="margin: 0; font-size: 13px;">
+                            <input type="checkbox" id="toggleTransfers" checked onchange="toggleMapLayer('transfers')">
+                            <span>Show Transfer Arrows</span>
+                        </label>
+                        <label class="filter-toggle" style="margin: 0; font-size: 13px;">
+                            <input type="checkbox" id="toggleRoute" checked onchange="toggleMapLayer('route')">
+                            <span>Show Van Route</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="planDeliveryTrip()">
+                        <span>⚡ Plan Delivery Trip</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="routeSavingsBanner" class="panel hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; border-radius: 12px; padding: 18px 22px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 22px;">🚚</span>
+                        <h3 style="margin: 0; color: #fff; font-size: 17px; font-weight: 700;">Optimized One-Trip Vehicle Delivery Route</h3>
+                        <span class="badge" style="background: #10b981; color: white; border: none;" id="routeSavingsBadge">KM SAVED</span>
+                    </div>
+                    <p style="margin: 4px 0 0 32px; color: #cbd5e1; font-size: 13px;" id="routeMissionSummary">
+                        Consolidated all separate transfer round trips into a single multi-stop delivery loop respecting van capacity.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;" id="routeMetricsGrid"></div>
+            </div>
+        </div>
+
+        <div class="panel" style="padding: 12px; margin-bottom: 20px; position: relative;">
+            <div id="facilityMap" style="height: 540px; border-radius: 10px; width: 100%; z-index: 1;"></div>
+            
+            <div style="position: absolute; bottom: 25px; right: 25px; z-index: 1000; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(4px); padding: 12px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 12px; border: 1px solid var(--slate-200); line-height: 1.6;">
+                <div style="font-weight: 700; margin-bottom: 4px; color: var(--navy-900);">Facility Risk Status</div>
+                <div style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#ef4444;"></span> <b>Critical</b> (Stockout ≤ 7d)</div>
+                <div style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#f97316;"></span> <b>High Risk</b> (Stockout ≤ 14d)</div>
+                <div style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#eab308;"></span> <b>Medium Risk</b></div>
+                <div style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#10b981;"></span> <b>Safe / Surplus</b> Facility</div>
+                <div style="height: 1px; background: var(--slate-200); margin: 6px 0;"></div>
+                <div style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:16px; height:3px; background:#8b5cf6;"></span> 🟣 Transfer Arrow (Surplus &rarr; Deficit)</div>
+                <div style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block; width:16px; height:4px; background:#2563eb;"></span> 🔵 One-Trip Van Delivery Route</div>
+            </div>
+        </div>
+
+        <div class="panel" id="routeItineraryPanel">
+            <div class="panel-header flex-between">
+                <div>
+                    <h3 class="panel-title">📋 Turn-by-Turn Delivery Route Manifest</h3>
+                    <p class="panel-subtitle">Sequential pickup and delivery waypoint instructions respecting van capacity</p>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="routeItineraryTable" class="data-table"></table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== 4. ASK & ANALYSE ===================== -->
+    <section id="tab-ask" th:class="${activeTab == 'ask' ? 'page' : 'page hidden'}" class="page hidden">
+        <div class="panel ask-panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">AI Stockout Prediction &amp; Redistribution Assistant</h2>
+                    <p class="panel-subtitle">Ask questions to detect impending facility stockouts and calculate optimal inter-facility transfers.</p>
+                </div>
+            </div>
+
+            <div class="query-box">
+                <label for="question" class="input-label"><b>Query Scenario</b></label>
+                <textarea id="question" rows="2" class="query-textarea">Which facilities in the district are at risk of running out of paracetamol and ORS in the next 10 days, and where can stock come from?</textarea>
+                
+                <div class="example-chips">
+                    <span class="chip-label">Quick Scenarios:</span>
+                    <button class="chip link" data-q="Which facilities in the district are at risk of running out of paracetamol and ORS in the next 10 days, and where can stock come from?">Paracetamol &amp; ORS (10 Days)</button>
+                    <button class="chip link" data-q="Will any PHC run out of zinc or ORS in the next 3 weeks?">Diarrhoea Care (3 Weeks)</button>
+                    <button class="chip link" data-q="Show all essential medicines at risk in the next 30 days">All Medicines (30 Days)</button>
+                    <button class="chip link" data-q="Paracetamol shortage in Ranipet next 2 weeks">Ranipet Paracetamol</button>
+                </div>
+
+                <div class="query-actions">
+                    <button id="askBtn" class="btn btn-primary">
+                        <span>⚡ Run Prediction &amp; Generate Plan</span>
+                    </button>
+                    <span id="askStatus" class="status-msg"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="results" class="hidden results-container">
+            <div class="summary-card">
+                <div class="summary-badge">Summary of AI Findings</div>
+                <p class="summary-meta" id="interpretation"></p>
+                <ul id="summary" class="summary-list"></ul>
+            </div>
+
+            <div class="panel result-panel">
+                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h3 class="panel-title">🔄 Recommended Inter-Facility Stock Transfers</h3>
+                        <p class="panel-subtitle">Nearby surplus facilities that can safely spare inventory to prevent stockouts.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="showTab('map')" style="background: #0284c7; font-weight: 600; padding: 7px 16px; font-size: 13px;">
+                        🗺️ View on Map &amp; Plan Delivery Trip &rarr;
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table id="transferTable" class="data-table"></table>
+                </div>
+            </div>
+
+            <div class="panel result-panel">
+                <div class="panel-header flex-between">
+                    <div>
+                        <h3 class="panel-title">🚨 Facility Stock-out Risk Analysis</h3>
+                        <p class="panel-subtitle">Batch simulation against AI demand forecast with disease trend weighting.</p>
+                    </div>
+                    <label class="filter-toggle">
+                        <input type="checkbox" id="onlyRisk" checked>
+                        <span>Only show items needing attention</span>
+                    </label>
+                </div>
+                <div class="table-container">
+                    <table id="riskTable" class="data-table"></table>
+                </div>
+            </div>
+
+            <div class="panel result-panel">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">🛒 Suggested Purchase Orders (Procurement)</h3>
+                        <p class="panel-subtitle">Reorder recommendations incorporating lead times, safety stocks, and planned transfers.</p>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="procTable" class="data-table"></table>
+                </div>
+            </div>
+
+            <div class="panel result-panel">
+                <div class="panel-header">
+                    <div>
+                        <h3 class="panel-title">⏳ Expiry Waste Prevention</h3>
+                        <p class="panel-subtitle">Batches with potential waste before consumption under FIFO scheduling.</p>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="expiryTable" class="data-table"></table>
+                </div>
+            </div>
+
+            <details class="method-details">
+                <summary>Calculation &amp; AI Modeling Details</summary>
+                <div class="method-body">
+                    <p id="method"></p>
+                </div>
+            </details>
+        </div>
+    </section>
+
+    <!-- ===================== 5. TRANSFERS ===================== -->
+    <section id="tab-transfers" th:class="${activeTab == 'transfers' ? 'page' : 'page hidden'}" class="page hidden">
+        <div class="panel">
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h2 class="panel-title">🚚 Inter-Facility Transfer Orders</h2>
+                    <p class="panel-subtitle">Review approved transfers. Clicking <b>Complete</b> instantly updates facility stocks in the database.</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="showTab('map')" style="background: #0284c7; font-weight: 600;">🗺️ Plan Delivery Trip on Map</button>
+                    <button class="btn btn-secondary" onclick="loadTransfers()">↻ Refresh Orders</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="ordersTable" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>From (Surplus)</th><th>To (Deficit)</th><th>Medicine</th><th>Quantity</th><th>Distance</th><th>Status</th><th>Rationale</th><th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(transfers)}">
+                            <td colspan="9" style="text-align: center; color: #64748b; padding: 20px;">No transfers logged yet. Use the AI Forecast tab to generate and approve recommendations.</td>
+                        </tr>
+                        <tr th:each="t : ${transfers}">
+                            <td th:text="${t.id}" style="font-weight: 600; color: #64748b;"></td>
+                            <td><strong th:text="${t.fromFacility}"></strong></td>
+                            <td><strong th:text="${t.toFacility}"></strong></td>
+                            <td th:text="${t.medicine}"></td>
+                            <td><span class="badge badge-info" th:text="${t.quantity} + ' units'"></span></td>
+                            <td th:text="${#numbers.formatDecimal(t.distanceKm, 1, 1)} + ' km'"></td>
+                            <td><span class="badge" th:text="${t.status}"></span></td>
+                            <td th:text="${t.rationale}" style="font-size: 13px; max-width: 250px;"></td>
+                            <td th:text="${t.createdAt}" style="font-size: 12px; color: #64748b;"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top: 24px;">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">🛒 External Procurement Orders (Purchase Orders)</h2>
+                    <p class="panel-subtitle">Orders generated from AI procurement suggestions. Click <b>Receive Stock</b> when depot shipment arrives to automatically check batches into inventory.</p>
+                </div>
+                <button class="btn btn-secondary" onclick="loadProcurementOrders()">↻ Refresh Purchase Orders</button>
+            </div>
+            <div class="table-container">
+                <table id="poTable" class="data-table"></table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== 6. STOCK & MASTER DATA ===================== -->
+    <section id="tab-data" th:class="${activeTab == 'data' ? 'page' : 'page hidden'}" class="page hidden">
+        <div class="form-grid">
+            <form id="batchForm" class="panel form-panel">
+                <h3 class="panel-title">📥 Receive Stock (New Batch)</h3>
+                <div class="form-row">
+                    <label>Facility
+                        <select name="facilityId" class="facSelect" required>
+                            <option th:each="f : ${facilities}" th:value="${f.id}" th:text="${f.name}"></option>
+                        </select>
+                    </label>
+                    <label>Medicine
+                        <select name="medicineId" class="medSelect" required>
+                            <option th:each="m : ${medicines}" th:value="${m.id}" th:text="${m.name} + ' (' + ${m.strength} + ')'"></option>
+                        </select>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>Batch No.
+                        <input name="batchNo" placeholder="e.g. B2041" required>
+                    </label>
+                    <label>Quantity
+                        <input name="quantity" type="number" min="1" placeholder="e.g. 1000" required>
+                    </label>
+                    <label>Expiry Date
+                        <input name="expiryDate" type="date" required>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Save Batch</button>
+                    <span class="muted formMsg"></span>
+                </div>
+            </form>
+
+            <form id="consForm" class="panel form-panel">
+                <h3 class="panel-title">📋 Log Daily Consumption</h3>
+                <div class="form-row">
+                    <label>Facility
+                        <select name="facilityId" class="facSelect" required>
+                            <option th:each="f : ${facilities}" th:value="${f.id}" th:text="${f.name}"></option>
+                        </select>
+                    </label>
+                    <label>Medicine
+                        <select name="medicineId" class="medSelect" required>
+                            <option th:each="m : ${medicines}" th:value="${m.id}" th:text="${m.name} + ' (' + ${m.strength} + ')'"></option>
+                        </select>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>Date
+                        <input name="date" type="date" required>
+                    </label>
+                    <label>Quantity Issued
+                        <input name="issued" type="number" min="0" placeholder="e.g. 50" required>
+                    </label>
+                    <label>Quantity Demanded
+                        <input name="demanded" type="number" min="0" placeholder="Optional (defaults to issued)">
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Record Consumption</button>
+                    <span class="muted formMsg"></span>
+                </div>
+            </form>
+        </div>
+
+        <div class="form-grid" style="margin-top: 20px;">
+            <form id="newFacForm" class="panel form-panel">
+                <h3 class="panel-title">🏥 Register New Facility</h3>
+                <div class="form-row">
+                    <label>Facility Code
+                        <input name="code" placeholder="e.g. PHC-TIM" required>
+                    </label>
+                    <label>Facility Name
+                        <input name="name" placeholder="e.g. PHC Timiri" required>
+                    </label>
+                    <label>Facility Type
+                        <select name="type" required>
+                            <option value="PHC">Primary Health Centre (PHC)</option>
+                            <option value="CHC">Community Health Centre (CHC)</option>
+                            <option value="DH">District Hospital (DH)</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>District
+                        <input name="district" placeholder="e.g. Vellore" required>
+                    </label>
+                    <label>Latitude
+                        <input name="latitude" type="number" step="0.0001" placeholder="12.9100" required>
+                    </label>
+                    <label>Longitude
+                        <input name="longitude" type="number" step="0.0001" placeholder="79.2500" required>
+                    </label>
+                    <label>Catchment Pop.
+                        <input name="population" type="number" min="1000" placeholder="25000" required>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Register Facility</button>
+                    <span class="muted formMsg"></span>
+                </div>
+            </form>
+
+            <form id="newMedForm" class="panel form-panel">
+                <h3 class="panel-title">💊 Add Essential Medicine</h3>
+                <div class="form-row">
+                    <label>Medicine Code
+                        <input name="code" placeholder="e.g. PCM650" required>
+                    </label>
+                    <label>Medicine Name
+                        <input name="name" placeholder="e.g. Paracetamol 650mg" required>
+                    </label>
+                    <label>Strength
+                        <input name="strength" placeholder="e.g. 650 mg" required>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>Unit Formulation
+                        <input name="unit" placeholder="tablet / sachet / vial" required>
+                    </label>
+                    <label>Epidemiology Driver
+                        <select name="diseaseTag" required>
+                            <option value="NONE">General / Chronic (NONE)</option>
+                            <option value="FEVER">Fever / Vector-borne (FEVER)</option>
+                            <option value="DIARRHOEA">Diarrhoeal Disease (DIARRHOEA)</option>
+                            <option value="ARI">Acute Respiratory Infection (ARI)</option>
+                        </select>
+                    </label>
+                    <label>Lead Time (Days)
+                        <input name="leadTimeDays" type="number" min="1" value="14" required>
+                    </label>
+                    <label>Unit Price (₹)
+                        <input name="unitPrice" type="number" step="0.01" min="0.01" value="1.00" required>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">Add to Master List</button>
+                    <span class="muted formMsg"></span>
+                </div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <h3 class="panel-title">📦 Detailed Batch-Level Inventory &amp; Expiry Ledger</h3>
+                    <p class="panel-subtitle">Auditable batch numbers, quantities, shelf-life countdowns, and active/expired status</p>
+                </div>
+                <button class="btn btn-secondary" onclick="loadBatches()">↻ Refresh Batches</button>
+            </div>
+            <div class="table-container">
+                <table id="batchLedgerTable" class="data-table"></table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title">📊 Current Usable Stock by Facility</h3>
+            </div>
+            <div class="table-container">
+                <table id="stockTable" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Facility</th><th>Medicine</th><th>Usable Stock</th><th>Expired Stock</th><th>Nearest Expiry</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(stockRows)}">
+                            <td colspan="5" style="text-align:center; color:#64748b;">No stock loaded in database.</td>
+                        </tr>
+                        <tr th:each="r : ${stockRows}">
+                            <td><strong th:text="${r.facility}"></strong></td>
+                            <td th:text="${r.medicine}"></td>
+                            <td th:text="${r.usableQuantity}"></td>
+                            <td th:text="${r.expiredQuantity}"></td>
+                            <td th:text="${r.nearestExpiry}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title">💊 Essential Medicine Master List (Thymeleaf SSR)</h3>
+            </div>
+            <div class="table-container">
+                <table id="medTable" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Medicine Name</th><th>Code</th><th>Strength</th><th>Unit</th><th>Epidemiology Driver</th><th>Lead Time</th><th>Unit Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(medicines)}">
+                            <td colspan="8" style="text-align: center; color: #64748b;">No medicines found in database.</td>
+                        </tr>
+                        <tr th:each="m : ${medicines}">
+                            <td th:text="${m.id}" style="font-weight: 600; color: #64748b;"></td>
+                            <td><strong th:text="${m.name}"></strong></td>
+                            <td><code th:text="${m.code != null ? m.code : '-'}" style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-weight: 600;"></code></td>
+                            <td th:text="${m.strength}"></td>
+                            <td th:text="${m.unit}"></td>
+                            <td><span class="badge" th:text="${m.diseaseTag}"></span></td>
+                            <td th:text="${m.leadTimeDays} + ' days'"></td>
+                            <td th:text="'₹' + ${#numbers.formatDecimal(m.unitPrice, 1, 2)}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3 class="panel-title">🏥 Registered Facilities in District (Thymeleaf SSR)</h3>
+            </div>
+            <div class="table-container">
+                <table id="facTable" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Facility Name</th><th>Code</th><th>Type</th><th>District</th><th>Latitude</th><th>Longitude</th><th>Catchment Pop.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(facilities)}">
+                            <td colspan="8" style="text-align: center; color: #64748b;">No facilities registered for this district.</td>
+                        </tr>
+                        <tr th:each="f : ${facilities}">
+                            <td th:text="${f.id}" style="font-weight: 600; color: #64748b;"></td>
+                            <td><strong th:text="${f.name}"></strong></td>
+                            <td><code th:text="${f.code}"></code></td>
+                            <td><span class="badge" th:text="${f.type}"></span></td>
+                            <td th:text="${f.district}"></td>
+                            <td th:text="${f.latitude}"></td>
+                            <td th:text="${f.longitude}"></td>
+                            <td th:text="${#numbers.formatInteger(f.population, 1, 'COMMA')} + ' citizens'"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Thymeleaf Modals Fragment -->
+<div th:replace="~{fragments/modals :: chartModal}"></div>
+<div th:replace="~{fragments/modals :: autoPilotModal}"></div>
+
+<!-- Thymeleaf Footer Fragment -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<script th:src="@{/app.js}"></script>
+</body>
+</html>

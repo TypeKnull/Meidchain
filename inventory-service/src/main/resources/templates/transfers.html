@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title}">MediChain - Inter-Facility Transfers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+
+<!-- Thymeleaf Header Fragment -->
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Thymeleaf Navigation Fragment -->
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<main class="app-main" style="max-width: 1300px; margin: 24px auto; padding: 0 20px;">
+    
+    <div class="section-header" style="margin-bottom: 24px;">
+        <div>
+            <h2 class="section-title">🚚 Inter-Facility Stock Redistribution Orders</h2>
+            <p class="muted">
+                Server-side rendered via <strong>Spring Boot &amp; Thymeleaf</strong> linked directly to <strong>PostgreSQL</strong>. 
+                Total Transfers Logged: <strong th:text="${totalTransfers}"></strong>
+            </p>
+        </div>
+        <div class="quick-actions">
+            <a th:href="@{/}" class="btn btn-secondary">&larr; Back to Interactive Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Transfers Table Panel -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">Redistribution Audit Log</h3>
+            <span class="badge badge-primary">AI Rebalancing Engine</span>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>From (Surplus)</th>
+                        <th>To (Deficit)</th>
+                        <th>Medicine</th>
+                        <th>Quantity</th>
+                        <th>Transit Distance</th>
+                        <th>Status</th>
+                        <th>Clinical Rationale</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(transfers)}">
+                        <td colspan="9" style="text-align: center; padding: 24px; color: #64748b;">
+                            No transfers recorded yet. Use the interactive dashboard to generate and approve recommendations.
+                        </td>
+                    </tr>
+                    <tr th:each="t : ${transfers}">
+                        <td th:text="${t.id}" style="font-weight: 600; color: #64748b;"></td>
+                        <td>
+                            <strong th:text="${t.fromFacility}"></strong>
+                        </td>
+                        <td>
+                            <strong th:text="${t.toFacility}"></strong>
+                        </td>
+                        <td th:text="${t.medicine}"></td>
+                        <td>
+                            <span class="badge badge-info" th:text="${t.quantity} + ' units'"></span>
+                        </td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(t.distanceKm, 1, 1)} + ' km'"></span>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${t.status == 'COMPLETED' ? 'badge-success' : (t.status == 'APPROVED' ? 'badge-primary' : (t.status == 'REJECTED' ? 'badge-danger' : 'badge-warning'))}"
+                                  th:text="${t.status}"></span>
+                        </td>
+                        <td style="font-size: 13px; color: #334155; max-width: 320px;" th:text="${t.rationale}"></td>
+                        <td style="font-size: 12px; color: #64748b;" th:text="${t.createdAt}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- Thymeleaf Footer Fragment -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title}">MediChain - Essential Medicines Catalog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+
+<!-- Thymeleaf Header Fragment -->
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Thymeleaf Navigation Fragment -->
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<main class="app-main" style="max-width: 1300px; margin: 24px auto; padding: 0 20px;">
+    
+    <div class="section-header" style="margin-bottom: 24px;">
+        <div>
+            <h2 class="section-title">💊 Essential Medicines Catalog (NLEM / WHO EML)</h2>
+            <p class="muted">
+                Server-side rendered via <strong>Spring Boot &amp; Thymeleaf</strong> linked directly to <strong>PostgreSQL</strong>. 
+                Total Medicines Tracked: <strong th:text="${totalMedicines}"></strong>
+            </p>
+        </div>
+        <div class="quick-actions">
+            <a th:href="@{/}" class="btn btn-secondary">&larr; Back to Interactive Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Medicines Table Panel -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">Master Drug Formulary &amp; Supply Constraints</h3>
+            <span class="badge badge-success">India NLEM 2022 Verified</span>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Medicine Name</th>
+                        <th>Code</th>
+                        <th>Dosage Strength</th>
+                        <th>Packaging Unit</th>
+                        <th>Seasonal Disease Driver</th>
+                        <th>Lead Time</th>
+                        <th>Unit Price</th>
+                        <th>Source / Standard</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(medicines)}">
+                        <td colspan="9" style="text-align: center; padding: 24px; color: #64748b;">
+                            No medicines loaded in database.
+                        </td>
+                    </tr>
+                    <tr th:each="m : ${medicines}">
+                        <td th:text="${m.id}" style="font-weight: 600; color: #64748b;"></td>
+                        <td>
+                            <strong th:text="${m.name}"></strong>
+                        </td>
+                        <td>
+                            <code th:text="${m.code != null ? m.code : '-'}" style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-weight: 600;"></code>
+                        </td>
+                        <td th:text="${m.strength}"></td>
+                        <td th:text="${m.unit}"></td>
+                        <td>
+                            <span class="badge" 
+                                  th:classappend="${m.diseaseTag == 'FEVER' ? 'badge-danger' : (m.diseaseTag == 'DIARRHOEA' ? 'badge-warning' : (m.diseaseTag == 'ARI' ? 'badge-primary' : 'badge-neutral'))}"
+                                  th:text="${m.diseaseTag}"></span>
+                        </td>
+                        <td>
+                            <span th:text="${m.leadTimeDays} + ' days'"></span>
+                        </td>
+                        <td>
+                            <strong th:text="'₹' + ${#numbers.formatDecimal(m.unitPrice, 1, 2)}"></strong>
+                        </td>
+                        <td style="font-size: 12px; color: #64748b;" th:text="${m.source != null ? m.source : 'NLEM'}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- Thymeleaf Footer Fragment -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>

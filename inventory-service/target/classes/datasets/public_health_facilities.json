@@ -1,0 +1,101 @@
+[
+  {
+    "code": "DH-VLR",
+    "name": "Vellore District Hospital",
+    "type": "DH",
+    "district": "Vellore",
+    "lat": 12.9165,
+    "lon": 79.1325,
+    "population": 90000
+  },
+  {
+    "code": "CHC-KPD",
+    "name": "CHC Katpadi",
+    "type": "CHC",
+    "district": "Vellore",
+    "lat": 12.9692,
+    "lon": 79.1459,
+    "population": 55000
+  },
+  {
+    "code": "PHC-GDY",
+    "name": "PHC Gudiyatham",
+    "type": "PHC",
+    "district": "Vellore",
+    "lat": 12.9446,
+    "lon": 78.8731,
+    "population": 42000
+  },
+  {
+    "code": "PHC-ANC",
+    "name": "PHC Anaicut",
+    "type": "PHC",
+    "district": "Vellore",
+    "lat": 12.9930,
+    "lon": 79.0070,
+    "population": 30000
+  },
+  {
+    "code": "PHC-KNB",
+    "name": "PHC Kaniyambadi",
+    "type": "PHC",
+    "district": "Vellore",
+    "lat": 12.8456,
+    "lon": 79.1338,
+    "population": 28000
+  },
+  {
+    "code": "PHC-PNB",
+    "name": "PHC Pernambut",
+    "type": "PHC",
+    "district": "Vellore",
+    "lat": 12.9393,
+    "lon": 78.7178,
+    "population": 32000
+  },
+  {
+    "code": "PHC-PLK",
+    "name": "PHC Pallikonda",
+    "type": "PHC",
+    "district": "Vellore",
+    "lat": 12.9067,
+    "lon": 78.9411,
+    "population": 30000
+  },
+  {
+    "code": "PHC-PNI",
+    "name": "PHC Ponnai",
+    "type": "PHC",
+    "district": "Vellore",
+    "lat": 13.1247,
+    "lon": 79.2533,
+    "population": 24000
+  },
+  {
+    "code": "DH-WLJ",
+    "name": "Walajapet District Hospital",
+    "type": "DH",
+    "district": "Ranipet",
+    "lat": 12.9256,
+    "lon": 79.3667,
+    "population": 80000
+  },
+  {
+    "code": "PHC-ARC",
+    "name": "PHC Arcot",
+    "type": "PHC",
+    "district": "Ranipet",
+    "lat": 12.9067,
+    "lon": 79.3197,
+    "population": 34000
+  },
+  {
+    "code": "PHC-SHL",
+    "name": "PHC Sholinghur",
+    "type": "PHC",
+    "district": "Ranipet",
+    "lat": 13.1156,
+    "lon": 79.4233,
+    "population": 30000
+  }
+]

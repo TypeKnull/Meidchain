@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- Detail popup for "Why?" with interactive Chart.js Fragment -->
+<div th:fragment="chartModal" id="modal" class="modal hidden">
+    <div class="modal-box">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <h2 id="modalTitle" class="modal-title"></h2>
+        <div class="modal-content">
+            <div class="modal-factors-box">
+                <h4>Key Forecast Drivers:</h4>
+                <ul id="modalFactors" class="factors-list"></ul>
+            </div>
+            <div class="modal-model-badge" id="modalModel"></div>
+            <div class="chart-container">
+                <canvas id="chart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-Pilot Audit History Modal Fragment -->
+<div th:fragment="autoPilotModal" id="autoPilotModal" class="modal hidden">
+    <div class="modal-box" style="max-width: 750px;">
+        <button class="modal-close" onclick="document.getElementById('autoPilotModal').classList.add('hidden')">&times;</button>
+        <h2 class="modal-title">🤖 Autonomous Auto-Pilot Execution Logs</h2>
+        <p class="muted" style="margin-bottom: 16px;">Automated inter-facility stock transfers and procurement reorders executed to prevent stockouts and expire wastage.</p>
+        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+            <table id="autoPilotTable" class="data-table"></table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

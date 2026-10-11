@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- Reusable Thymeleaf Navigation Bar Fragment -->
+<nav th:fragment="nav" class="app-nav">
+    <button class="nav-tab" th:classappend="${activeTab == 'dashboard' or activeTab == null ? 'active' : ''}" data-tab="dashboard" onclick="navigateTab('dashboard')">
+        <span class="tab-icon">📊</span> Overview Dashboard
+    </button>
+    <button class="nav-tab" th:classappend="${activeTab == 'runway' ? 'active' : ''}" data-tab="runway" onclick="navigateTab('runway')">
+        <span class="tab-icon">📈</span> AI Stock Runway &amp; Seasonality
+    </button>
+    <button class="nav-tab" th:classappend="${activeTab == 'map' ? 'active' : ''}" data-tab="map" style="position: relative;" onclick="navigateTab('map')">
+        <span class="tab-icon">🗺️</span> Facility Map &amp; Delivery Route
+        <span style="background: #0284c7; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 9999px; margin-left: 4px;">GIS LIVE</span>
+    </button>
+    <button class="nav-tab" th:classappend="${activeTab == 'ask' ? 'active' : ''}" data-tab="ask" onclick="navigateTab('ask')">
+        <span class="tab-icon">⚡</span> AI Stockout Forecast &amp; Transfers
+    </button>
+    <button class="nav-tab" th:classappend="${activeTab == 'transfers' ? 'active' : ''}" data-tab="transfers" onclick="navigateTab('transfers')">
+        <span class="tab-icon">🚚</span> Transfers &amp; Procurement Orders
+    </button>
+    <button class="nav-tab" th:classappend="${activeTab == 'data' ? 'active' : ''}" data-tab="data" onclick="navigateTab('data')">
+        <span class="tab-icon">📦</span> Inventory &amp; Facilities
+    </button>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 6px; padding: 0 10px; border-left: 1px solid #cbd5e1;">
+        <span style="font-size: 11px; color: #64748b; font-weight: 600;">Thymeleaf SSR:</span>
+        <a th:href="@{/facilities}" class="nav-ssr-link" th:style="${activeTab == 'facilities' ? 'color:#fff; background:#0284c7; text-decoration:none; font-size:13px; font-weight:600; padding:4px 8px; border-radius:6px;' : 'color:#0284c7; text-decoration:none; font-size:13px; font-weight:600; padding:4px 8px; border-radius:6px;'}">🏥 Facilities</a>
+        <a th:href="@{/medicines}" class="nav-ssr-link" th:style="${activeTab == 'medicines' ? 'color:#fff; background:#0284c7; text-decoration:none; font-size:13px; font-weight:600; padding:4px 8px; border-radius:6px;' : 'color:#0284c7; text-decoration:none; font-size:13px; font-weight:600; padding:4px 8px; border-radius:6px;'}">💊 Medicines</a>
+        <a th:href="@{/transfers-view}" class="nav-ssr-link" th:style="${activeTab == 'transfers-ssr' ? 'color:#fff; background:#0284c7; text-decoration:none; font-size:13px; font-weight:600; padding:4px 8px; border-radius:6px;' : 'color:#0284c7; text-decoration:none; font-size:13px; font-weight:600; padding:4px 8px; border-radius:6px;'}">🚚 Transfers</a>
+    </div>
+</nav>
+
+<script>
+function navigateTab(tabName) {
+    if (!tabName) return;
+    if (typeof window.showTab === 'function' && document.getElementById('tab-' + tabName)) {
+        window.showTab(tabName);
+    } else {
+        window.location.href = '/?tab=' + encodeURIComponent(tabName);
+    }
+}
+</script>
+
+</body>
+</html>

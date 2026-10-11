@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title}">MediChain - Facilities Master</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+
+<!-- Thymeleaf Header Fragment -->
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Thymeleaf Navigation Fragment -->
+<nav th:replace="~{fragments/nav :: nav}"></nav>
+
+<main class="app-main" style="max-width: 1300px; margin: 24px auto; padding: 0 20px;">
+    
+    <div class="section-header" style="margin-bottom: 24px;">
+        <div>
+            <h2 class="section-title">🏥 Healthcare Facilities Master</h2>
+            <p class="muted">
+                Server-side rendered via <strong>Spring Boot &amp; Thymeleaf</strong> linked directly to <strong>PostgreSQL</strong>. 
+                Total Facilities: <strong th:text="${totalFacilities}"></strong>
+            </p>
+        </div>
+        <div class="quick-actions">
+            <a th:href="@{/}" class="btn btn-secondary">&larr; Back to Interactive Dashboard</a>
+        </div>
+    </div>
+
+    <!-- District Filter Card -->
+    <div class="panel" style="margin-bottom: 24px; padding: 18px 24px;">
+        <form method="get" th:action="@{/facilities}" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+            <label for="districtSelect" style="font-weight: 600;">Filter by District:</label>
+            <select id="districtSelect" name="district" class="input" style="padding: 8px 14px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                <option value="All" th:selected="${selectedDistrict == 'All'}">All Districts</option>
+                <option th:each="d : ${districts}"
+                        th:value="${d}"
+                        th:text="${d}"
+                        th:selected="${d == selectedDistrict}"></option>
+            </select>
+            <button type="submit" class="btn btn-primary" style="padding: 8px 18px;">Apply Filter</button>
+        </form>
+    </div>
+
+    <!-- Facilities Table Panel -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">Registered Health Centres &amp; Hospitals</h3>
+            <span class="badge badge-info" th:text="${selectedDistrict} + ' Region'"></span>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Facility Name</th>
+                        <th>Type</th>
+                        <th>District</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Catchment Population</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(facilities)}">
+                        <td colspan="7" style="text-align: center; padding: 24px; color: #64748b;">
+                            No facilities found for this district.
+                        </td>
+                    </tr>
+                    <tr th:each="f : ${facilities}">
+                        <td th:text="${f.id}" style="font-weight: 600; color: #64748b;"></td>
+                        <td>
+                            <strong th:text="${f.name}"></strong>
+                            <div th:if="${f.code != null}" style="font-size: 11px; color: #94a3b8;" th:text="'Code: ' + ${f.code}"></div>
+                        </td>
+                        <td>
+                            <span class="badge" 
+                                  th:classappend="${f.type == 'HOSPITAL' ? 'badge-primary' : (f.type == 'CHC' ? 'badge-warning' : 'badge-neutral')}"
+                                  th:text="${f.type != null ? f.type : 'PHC'}"></span>
+                        </td>
+                        <td th:text="${f.district}"></td>
+                        <td th:text="${f.latitude}"></td>
+                        <td th:text="${f.longitude}"></td>
+                        <td th:text="${#numbers.formatInteger(f.population, 1, 'COMMA')} + ' citizens'"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- Thymeleaf Footer Fragment -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+</body>
+</html>
